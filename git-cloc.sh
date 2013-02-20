@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # flags
-debug=1
+debug=
 
 # tools
 debug()
