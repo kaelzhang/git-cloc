@@ -3,7 +3,7 @@
 # flags
 debug=1
 
-# tools ##############################
+# tools
 debug()
 {
     if [ -n "$debug" ]; then
@@ -14,18 +14,22 @@ debug()
 #overload arguments
 
 # git cloc 
-#   --since, --after    the beginning date, "2012-01-01"
-#   --until,--before    the end date, "2012-02-01"
-#   -u, --user          the author and user, "Kael". default(or "*") to all user. use -u instead of -a to avoid misunderstanding of "all"; 
-#   -b, --branch        default to "master", if "*" will count lines of all branches without duplication
-#   -r, --recursive     recursively search all sub directories of the specified working directory
-#   -c, --cwd           cwd
+#   --since, --after        the beginning date, "2012-01-01"
+#   --until,--before        the end date, "2012-02-01"
+#   --author|--committer    (no effect)the author and user, "Kael". 
+#                               default(or "*") to all user. use -u instead of -a to avoid misunderstanding of "all"; 
+#   -b, --branch            (no effect)default to "master", if "*" will count lines of all branches without duplication
+#   -r, --recursive         recursively search all sub directories of the specified working directory
+#   -c, --cwd               cwd
 after=
 before=
 author=
 branch=master
 recursive=
-cwd=.
+recurse_depth=10
+this_month=
+cwd="$PWD"
+
 
 while [[ $# -gt 0 ]]; do
     opt="$1"
@@ -41,6 +45,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
 
+        # TODO -> BUG
         --author|--committer)
             author="$1"; debug "author: $author"
             shift
@@ -56,6 +61,16 @@ while [[ $# -gt 0 ]]; do
             # no shift
             ;;
 
+        --recurse-depth)
+            recurse_depth="$1"; debug "recurse depth: $recurse_depth"
+            shift
+            ;;
+
+        # TODO
+        --this-month)
+            this_month=1; debug "this month: yes"
+            ;;
+
         -c|--cwd)
             cwd="$1"; debug "cwd: $cwd"
             shift
@@ -66,7 +81,8 @@ while [[ $# -gt 0 ]]; do
             ;;
 
         *)
-            die "Unexpected option: $opt"
+            echo "Unexpected option: $opt"
+            exit 1
             ;;
     esac
 done
@@ -90,34 +106,146 @@ if [[ -n "$branch" ]]; then
     : # log_query=`echo "$log_query --branches $branch"`
 fi
 
-debug "log_query: $log_query"
+debug "git log query: $log_query"
 
 
+# @param {string} $1 directory
+# @param {int} $2 depth
 git_repos(){
+    # debug "seaching git repos in: $1"
+
+    local current_depth="$2"
+    local sub_depth=
+
+    # or `expr` will throw a syntax error
+    if [[ ! -n "$current_depth" ]]; then
+        current_depth=0
+    fi
+
     for file in $1/*
     do
         if [[ -d "$file" ]]; then
             if [[ -d "$file/.git" ]]; then
-                # cloc $file
-                debug "git repo found: $file"
+                # debug "git repo found: $file"
+                cloc $file
             else
-                git_repos $file
-            fi
+                if [[ "$current_depth" -gt "$recurse_depth" ]]; then
+                    continue
+                fi
 
-        # else
-        #    echo $file
+                sub_depth=`expr $current_depth + 1`
+                git_repos $file $sub_depth
+            fi
         fi
     done
 }
 
+
+cloc_counter=0
+result_array=()
+
 cloc(){
     cd $1
 
-    # %H commit
-    commit_end=$(eval "$log_query --pretty=format:'%H' -1")
-    commit_start_plus_one=$(eval "$log_query --pretty=format:'%H' --reverse -1")
+    local last_commit=$(eval "$log_query --pretty=format:'%H' -1")
 
-    debug "from $commit_end to $commit_start_plus_one"
+    # use `echo` to convert the stdout into a single line
+    # cut the first part
+    local first_commit=`echo $(eval "$log_query --pretty=format:'%H' --reverse") | cut -d ' ' -f1`
+    local diff_result=
+    local repo=`basename $1`
+
+    # debug "first commit: $first_commit"
+    # debug "last commit: $last_commit"
+
+    # test if `first_commit` is already the earlist commit
+    if git diff "$first_commit^1" "$last_commit" --shortstat 2> /dev/null; then
+        first_commit=`echo "$first_commit^1"`
+    fi
+
+    if [[ -n "$last_commit" && -n "$first_commit" ]]; then
+        diff_result=`git diff "$first_commit" "$last_commit" --shortstat`
+
+        if [[ -n "$diff_result" ]]; then
+            echo "git repo: $repo"
+            echo "   $diff_result"
+
+            result_array[$cloc_counter]="$diff_result"
+            (( cloc_counter += 1 ))
+        fi
+    fi
+}
+
+
+summary(){
+    local count=${#result_array[@]}
+
+    local result=
+    local result_i=0
+
+    local info=
+    local info_len=
+
+    local slice=
+    local slice_i=
+    local slice_i_plus_one=
+
+    local files=0
+    local insertions=0
+    local deletions=0
+
+    while [[ $result_i -lt $count ]]; do
+
+        result=${result_array[$result_i]}
+        (( result_i += 1 ))
+
+        info=( $result )
+        info_len=${#info[@]}
+
+        slice_i=0
+        while [[ $slice_i -lt $info_len ]]; do
+
+            slice=${info[$slice_i]}
+            slice_i_plus_one=`expr $slice_i + 1`
+            (( slice_i += 1 ))
+
+            if [[ $slice_i_plus_one -ge $info_len ]]; then
+                continue
+            fi
+
+            case ${info[$slice_i_plus_one]} in
+
+                # file or files
+                file* )
+                    (( files += $slice )); # debug "files add $slice"
+                    (( slice_i += 1 ))
+                    ;;
+
+                # insertions
+                insertion* )
+                    (( insertions += $slice )); # debug "insertions add $slice"
+                    (( slice_i += 1 ))
+                    ;;
+
+                # deletions
+                deletion* )
+                    (( deletions += $slice )); # debug "deletions add $slice"
+                    (( slice_i += 1 ))
+                    ;;
+
+                * )
+                    ;;
+            esac
+        done # end while slice_i
+
+    done # end while result_i
+
+    echo
+    echo "total:--------------------"
+    echo "          repos: $count"
+    echo "  changed files: $files"
+    echo "     insertions: $insertions"
+    echo "      deletions: $deletions"
 }
 
 
@@ -130,8 +258,13 @@ else
         # TODO:
         # support sub directories of a git repo
         # (or any of the parent directories)
-        die "fatal: Not a git repository: .git"
+        echo "fatal: Not a git repository: .git"
+        echo "Use '-r' option, if you wanna recursively search all git repos"
+        exit 1
     fi
 fi
 
+summary
+
+exit 0
 
