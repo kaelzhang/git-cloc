@@ -11,15 +11,6 @@ debug(){
 }
 
 #overload arguments
-
-# git cloc 
-#   --since, --after        the beginning date, "2012-01-01"
-#   --until,--before        the end date, "2012-02-01"
-#   --author|--committer    (no effect)the author and user, "Kael". 
-#                               default(or "*") to all user. use -u instead of -a to avoid misunderstanding of "all"; 
-#   -b, --branch            (no effect)default to "master", if "*" will count lines of all branches without duplication
-#   -r, --recursive         recursively search all sub directories of the specified working directory
-#   -c, --cwd               cwd
 after=
 before=
 author=

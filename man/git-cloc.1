@@ -1,0 +1,79 @@
+.TH "GIT\-CLOC" "" "February 2013" "" ""
+.
+.SH "NAME"
+git\-cloc \- Count lines for code for git
+.
+.SH "SYNOPSIS"
+git\-cloc [\fIoptions\fR]
+.
+.SH "DESCRIPTION"
+Git\-cloc helps to count the file changes, insertions and deletions of a specified git repo\.
+.
+.P
+You could also use it to traverse all git repos inside the current or an assigned directory and generate a summary\.
+.
+.SH "OPTIONS"
+\-\-since \fIdate\fR, \-\-after \fIdate\fR
+.
+.IP "" 4
+.
+.nf
+
+The beginning date, "2012\-01\-01"
+.
+.fi
+.
+.IP "" 0
+.
+.P
+\-\-until \fIdate\fR, \-\-before \fIdate\fR
+.
+.IP "" 4
+.
+.nf
+
+The end date, "2012\-02\-01"
+.
+.fi
+.
+.IP "" 0
+.
+.P
+\-c \fIpath\fR, \-\-cwd \fIpath\fR
+.
+.IP "" 4
+.
+.nf
+
+Specify the current working directory
+.
+.fi
+.
+.IP "" 0
+.
+.P
+\-r, \-\-recursive
+.
+.IP "" 4
+.
+.nf
+
+Use this option, git\-cloc will walk through the current working directory to find all git repos and analysis them
+.
+.fi
+.
+.IP "" 0
+.
+.P
+\-\-recurse\-depth
+.
+.IP "" 4
+.
+.nf
+
+The maximun depth git\-cloc will traverse a directory into\. Default to 10
+.
+.fi
+.
+.IP "" 0
+

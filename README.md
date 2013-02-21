@@ -6,22 +6,32 @@
     |   |_| ||   |   |   |    |     |_ |       ||       ||     |_ 
     |_______||___|   |___|    |_______||_______||_______||_______|
 
-Count lines of code for GIT 
 
-INSTALL
+Git-cloc
+====
+Count lines of code for GIT
+
+
+Examples
+====
+
+Count lines of a specified git repo
+
+    git cloc
+
+Search all git repos within the current directory
+    
+    git cloc -r
+    
+Show git-cloc manual
+    
+    git cloc --help
+    
+    # or
+    git help cloc
+
+Install
 ====
     
     sudo sh install.sh
 
-USAGE
-====
-    
-    # inside a git repo
-    git cloc
-
-    # search all git repos within the current directory
-    git cloc -r
-
-arguments
-----
-    First, let me have a sleep... :p
