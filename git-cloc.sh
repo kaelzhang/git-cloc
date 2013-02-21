@@ -91,15 +91,15 @@ done
 log_query="git log"
 
 if [[ -n "$author" ]]; then
-    log_query=`echo "$log_query --author $author"`
+    log_query="$log_query --author $author"
 fi
 
 if [[ -n "$after" ]]; then
-    log_query=`echo "$log_query --after $after"`
+    log_query="$log_query --after $after"
 fi
 
 if [[ -n "$before" ]]; then
-    log_query=`echo "$log_query --before $before"`
+    log_query="$log_query --before $before"
 fi
 
 if [[ -n "$branch" ]]; then
@@ -159,12 +159,15 @@ cloc(){
     # debug "last commit: $last_commit"
 
     # test if `first_commit` is already the earlist commit
-    if git diff "$first_commit^1" "$last_commit" --shortstat 2> /dev/null; then
-        first_commit=`echo "$first_commit^1"`
+    # direct both stdout and stderr to NULL
+    if git diff "$first_commit^1" "$first_commit" --shortstat &> /dev/null; then
+        first_commit="$first_commit^1"
     fi
 
     if [[ -n "$last_commit" && -n "$first_commit" ]]; then
+        
         diff_result=`git diff "$first_commit" "$last_commit" --shortstat`
+        
 
         if [[ -n "$diff_result" ]]; then
             echo "git repo: $repo"
