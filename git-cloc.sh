@@ -4,8 +4,7 @@
 debug=
 
 # tools
-debug()
-{
+debug(){
     if [ -n "$debug" ]; then
         echo "$@" >&2
     fi
@@ -147,11 +146,11 @@ result_array=()
 cloc(){
     cd $1
 
-    local last_commit=$(eval "$log_query --pretty=format:'%H' -1")
+    local last_commit=$($log_query --pretty=format:'%H' -1)
 
     # use `echo` to convert the stdout into a single line
     # cut the first part
-    local first_commit=`echo $(eval "$log_query --pretty=format:'%H' --reverse") | cut -d ' ' -f1`
+    local first_commit=`echo $($log_query --pretty=format:'%H' --reverse) | cut -d ' ' -f1`
     local diff_result=
     local repo=`basename $1`
 
@@ -165,9 +164,7 @@ cloc(){
     fi
 
     if [[ -n "$last_commit" && -n "$first_commit" ]]; then
-        
         diff_result=`git diff "$first_commit" "$last_commit" --shortstat`
-        
 
         if [[ -n "$diff_result" ]]; then
             echo "git repo: $repo"
