@@ -15,9 +15,9 @@ Count lines of code for GIT
 Examples
 ====
 
-Count lines of a specified git repo
+Count lines within a specified period inside a git repo
 
-    git cloc
+    git cloc --after 2013-02-01 --before 2013-03-01
 
 Search all git repos within the current directory
     
