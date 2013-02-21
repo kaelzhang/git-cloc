@@ -23,7 +23,7 @@ Search all git repos within the current directory
     
     git cloc -r
     
-Show git-cloc manual
+Show git-cloc manual for more details
     
     git cloc --help
     
@@ -32,6 +32,10 @@ Show git-cloc manual
 
 Install
 ====
-    
-    sudo sh install.sh
 
+    # maybe you need a super user permission to do this
+    make install
+
+Uninstall
+====
+	make uninstall

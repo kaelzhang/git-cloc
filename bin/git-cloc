@@ -158,8 +158,8 @@ cloc(){
         diff_result=`git diff "$first_commit" "$last_commit" --shortstat`
 
         if [[ -n "$diff_result" ]]; then
-            echo "git repo: $repo"
-            echo "   $diff_result"
+            echo "Repo: $repo"
+            echo " $diff_result"
 
             result_array[$cloc_counter]="$diff_result"
             (( cloc_counter += 1 ))
@@ -232,11 +232,11 @@ summary(){
     done # end while result_i
 
     echo
-    echo "total:--------------------"
-    echo "          repos: $count"
-    echo "  changed files: $files"
-    echo "     insertions: $insertions"
-    echo "      deletions: $deletions"
+    echo "Summary:--------------------"
+    echo " repos        : $count"
+    echo " changed files: $files"
+    echo " insertions   : $insertions"
+    echo " deletions    : $deletions"
 }
 
 
