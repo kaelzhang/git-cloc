@@ -81,15 +81,15 @@ done
 log_query="git log"
 
 if [[ -n "$author" ]]; then
-    log_query="$log_query --author $author"
+    log_query+=" --author $author"
 fi
 
 if [[ -n "$after" ]]; then
-    log_query="$log_query --after $after"
+    log_query+=" --after $after"
 fi
 
 if [[ -n "$before" ]]; then
-    log_query="$log_query --before $before"
+    log_query+=" --before $before"
 fi
 
 if [[ -n "$branch" ]]; then
@@ -99,6 +99,7 @@ fi
 debug "git log query: $log_query"
 
 
+# @private
 # @param {string} $1 directory
 # @param {int} $2 depth
 git_repos(){
