@@ -34,3 +34,9 @@ OPTIONS
 	
 --recurse-depth
 	The maximun depth git-cloc will traverse a directory into. Default to 10
+
+--month <Y-M>
+    The month which will limit the counting, "2013-03"
+
+-o, --output
+    The file path where standard output will redirect and write into
