@@ -17,6 +17,7 @@ author=
 # branch=master
 recursive=
 recurse_depth=10
+no_summary=
 output=
 month=
 cwd="$PWD"
@@ -43,6 +44,10 @@ while [[ $# -gt 0 ]]; do
     opt="$1"
     shift
     case "$opt" in
+        --no-summary)
+            no_summary=1; debug "no summary: $no_summary"
+            ;;
+
         --since|--after)
             after="$1"; debug "after: $after"
             shift
@@ -169,6 +174,7 @@ cloc(){
     local first_commit=`echo $($log_query --pretty=format:'%H' --reverse) | cut -d ' ' -f1`
     local diff_result=
     local repo=`basename $1`
+    local print_line="$repo"
 
     local info=
     local info_len=
@@ -190,8 +196,6 @@ cloc(){
         diff_result=`git diff "$first_commit" "$last_commit" --shortstat`
 
         if [[ -n "$diff_result" ]]; then
-            
-            print_line="$repo"
 
             info=( $diff_result )
             info_len=${#info[@]}
@@ -230,11 +234,14 @@ cloc(){
                     * )
                         ;;
                 esac
-            done # end while slice_i
-
-            add_print "$print_line"
+            done # end while slice_i   
         fi
+
+    else
+        print_line="$print_line 0 0 0"
     fi
+
+    add_print "$print_line"
 }
 
 
@@ -244,6 +251,20 @@ summary(){
 
     if [[ -n $output ]]; then
         echo -e ${print_result[@]} | awk '{printf "%-30s %-15s %-12s %-11s\n",$1,$2,$3,$4}' > "$output"
+    fi
+
+    if [[ ! -n $no_summary ]]; then
+        # local repos=${#print_result[@]}
+        local repos=`echo -e ${print_result[@]} | awk 'NR!=1{a+=1;} END {print a}'`
+        local changed_files=`echo -e ${print_result[@]} | awk 'NR!=1{a+=$2;} END {print a}'`
+        local insertions=`echo -e ${print_result[@]} | awk 'NR!=1{a+=$3;} END {print a}'`
+        local deletions=`echo -e ${print_result[@]} | awk 'NR!=1{a+=$4;} END {print a}'`
+
+        echo "Summary: ----------------------------"
+        echo "Repos        : $repos"
+        echo "Changed files: $changed_files"
+        echo "Insertions   : $insertions"
+        echo "Deletions    : $deletions"
     fi
 }
 
