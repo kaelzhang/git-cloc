@@ -14,11 +14,29 @@ debug(){
 after=
 before=
 author=
-branch=master
+# branch=master
 recursive=
 recurse_depth=10
-this_month=
+output=
+month=
 cwd="$PWD"
+
+Y=`date +%Y`
+M=`date +%m`
+D=`date +%d`
+h=`date +%H`
+m=`date +%M`
+s=`date +%S`
+TIME="$Y-$M-$D $h.$m.$s"
+
+cloc_counter=0
+print_result=()
+print_result[$cloc_counter]="Repos Changed-Files Insertions Deletions\n"
+
+add_print(){
+    (( cloc_counter += 1 ))
+    print_result[$cloc_counter]="$1\n"
+}
 
 
 while [[ $# -gt 0 ]]; do
@@ -35,12 +53,6 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
 
-        # TODO -> BUG
-        --author|--committer)
-            author="$1"; debug "author: $author"
-            shift
-            ;;
-
         -b|--branch)
             branch="$1"; debug "branch: $branch"
             shift
@@ -51,14 +63,19 @@ while [[ $# -gt 0 ]]; do
             # no shift
             ;;
 
+        --month)
+            month="$1"; debug "month: $month"
+            shift
+            ;;
+
         --recurse-depth)
             recurse_depth="$1"; debug "recurse depth: $recurse_depth"
             shift
             ;;
 
-        # TODO
-        --this-month)
-            this_month=1; debug "this month: yes"
+        -o|--output)
+            output="$1"; debug "output file: $output"
+            shift
             ;;
 
         -c|--cwd)
@@ -80,6 +97,13 @@ done
 # generate git log query
 log_query="git log"
 
+if [[ -n "$month" ]]; then
+    single_year=`echo $month | cut -d '-' -f1`
+    single_month=`echo $month | cut -d '-' -f2`
+    after="$month-1"
+    before="$single_year-`expr $single_month + 1`-1"
+fi
+
 if [[ -n "$author" ]]; then
     log_query+=" --author $author"
 fi
@@ -99,6 +123,7 @@ fi
 debug "git log query: $log_query"
 
 
+# directory walker
 # @private
 # @param {string} $1 directory
 # @param {int} $2 depth
@@ -132,9 +157,7 @@ git_repos(){
 }
 
 
-cloc_counter=0
-result_array=()
-
+# main function
 cloc(){
     cd $1
 
@@ -145,6 +168,13 @@ cloc(){
     local first_commit=`echo $($log_query --pretty=format:'%H' --reverse) | cut -d ' ' -f1`
     local diff_result=
     local repo=`basename $1`
+
+    local info=
+    local info_len=
+
+    local slice=
+    local slice_i=
+    local slice_i_plus_one=
 
     # debug "first commit: $first_commit"
     # debug "last commit: $last_commit"
@@ -159,85 +189,61 @@ cloc(){
         diff_result=`git diff "$first_commit" "$last_commit" --shortstat`
 
         if [[ -n "$diff_result" ]]; then
-            echo "Repo: $repo"
-            echo " $diff_result"
+            
+            print_line="$repo"
 
-            result_array[$cloc_counter]="$diff_result"
-            (( cloc_counter += 1 ))
+            info=( $diff_result )
+            info_len=${#info[@]}
+
+            slice_i=0
+            while [[ $slice_i -lt $info_len ]]; do
+
+                slice=${info[$slice_i]}
+                slice_i_plus_one=`expr $slice_i + 1`
+                (( slice_i += 1 ))
+
+                if [[ $slice_i_plus_one -ge $info_len ]]; then
+                    continue
+                fi
+
+                case ${info[$slice_i_plus_one]} in
+
+                    # file or files
+                    file* )
+                        print_line="$print_line $slice"; debug "files add $slice"
+                        (( slice_i += 1 ))
+                        ;;
+
+                    # insertions
+                    insertion* )
+                        print_line="$print_line $slice"; debug "insertions add $slice"
+                        (( slice_i += 1 ))
+                        ;;
+
+                    # deletions
+                    deletion* )
+                        print_line="$print_line $slice"; debug "deletions add $slice"
+                        (( slice_i += 1 ))
+                        ;;
+
+                    * )
+                        ;;
+                esac
+            done # end while slice_i
+
+            add_print "$print_line"
         fi
     fi
 }
 
 
+# print result
 summary(){
-    local count=${#result_array[@]}
+    echo -e ${print_result[@]} | awk '{printf "%-18s %-15s %-12s %-11s\n",$1,$2,$3,$4}'
 
-    local result=
-    local result_i=0
-
-    local info=
-    local info_len=
-
-    local slice=
-    local slice_i=
-    local slice_i_plus_one=
-
-    local files=0
-    local insertions=0
-    local deletions=0
-
-    while [[ $result_i -lt $count ]]; do
-
-        result=${result_array[$result_i]}
-        (( result_i += 1 ))
-
-        info=( $result )
-        info_len=${#info[@]}
-
-        slice_i=0
-        while [[ $slice_i -lt $info_len ]]; do
-
-            slice=${info[$slice_i]}
-            slice_i_plus_one=`expr $slice_i + 1`
-            (( slice_i += 1 ))
-
-            if [[ $slice_i_plus_one -ge $info_len ]]; then
-                continue
-            fi
-
-            case ${info[$slice_i_plus_one]} in
-
-                # file or files
-                file* )
-                    (( files += $slice )); # debug "files add $slice"
-                    (( slice_i += 1 ))
-                    ;;
-
-                # insertions
-                insertion* )
-                    (( insertions += $slice )); # debug "insertions add $slice"
-                    (( slice_i += 1 ))
-                    ;;
-
-                # deletions
-                deletion* )
-                    (( deletions += $slice )); # debug "deletions add $slice"
-                    (( slice_i += 1 ))
-                    ;;
-
-                * )
-                    ;;
-            esac
-        done # end while slice_i
-
-    done # end while result_i
-
-    echo
-    echo "Summary:--------------------"
-    echo " repos        : $count"
-    echo " changed files: $files"
-    echo " insertions   : $insertions"
-    echo " deletions    : $deletions"
+    if [[ -n $output ]]; then
+        echo -e ${print_result[@]} | awk '{printf "%-18s %-15s %-12s %-11s\n",$1,$2,$3,$4}' > "$output"
+    fi
 }
 
 
