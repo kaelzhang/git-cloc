@@ -14,8 +14,8 @@ install:
 
 
 uninstall:
-	@echo "... installing bins to $(DESTDIR)$(PREFIX)/bin"
+	@echo "... uninstalling bins"
 	rm -f $(DESTDIR)$(PREFIX)/bin/git-cloc
 
-	@echo "... installing man pages to $(DESTDIR)$(MANPREFIX)"
+	@echo "... uninstalling man pages"
 	rm -f $(DESTDIR)$(MANPREFIX)/git-cloc.1

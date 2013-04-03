@@ -53,6 +53,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
 
+        # TODO
         -b|--branch)
             branch="$1"; debug "branch: $branch"
             shift

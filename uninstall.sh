@@ -4,8 +4,8 @@ MANPREFIX="$PREFIX/share/man/man1"
 mkdir -p $MANPREFIX
 mkdir -p $PREFIX/bin
 
-echo "... installing bins to $PREFIX/bin"
+echo "... uninstalling bins"
 rm -f $PREFIX/bin/git-cloc
 
-echo "... installing man pages to $MANPREFIX"
+echo "... uninstalling man pages"
 rm -f $MANPREFIX/git-cloc.1
