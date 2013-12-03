@@ -6,7 +6,7 @@ install:
 	@mkdir -p $(DESTDIR)$(PREFIX)/bin
 	
 	@echo "... installing bins to $(DESTDIR)$(PREFIX)/bin"
-	cp -f bin/git-cloc.sh $(DESTDIR)$(PREFIX)/bin
+	cp -f bin/git-cloc.sh $(DESTDIR)$(PREFIX)/bin/git-cloc
 	@chmod 755 $(DESTDIR)$(PREFIX)/bin/git-cloc
 
 	@echo "... installing man pages to $(DESTDIR)$(MANPREFIX)"
